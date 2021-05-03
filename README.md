@@ -13,6 +13,7 @@ Sanitization makes it easy to store slightly cleaner strings to your database.
 
 - Leading & training white spaces are stripped (`strip: true`)
 - All spaces are collapsed (`collapse: true`)
+- All empty strings are stored as `null` if the database column allows it (`nullify: true`)
 - All String columns are sanitized (`only: nil, except: nil`)
 - Columns of type `text` are not sanitized (`include_text_type: false`)
 - Casing remains unchanged (`case: nil`)
@@ -23,6 +24,7 @@ Sanitization makes it easy to store slightly cleaner strings to your database.
 ```sh
 bundle add sanitization
 ```
+
 
 ## Usage
 
@@ -62,7 +64,8 @@ class Person
   sanitization only: :do_not_collapse, collapse: false
 
   # Sanitize with a custom casing method named `leetcase` for the `133t` column.
-  sanitization only: '1337', case: :leet
+  # Don't nullify empty strings.
+  sanitization only: '1337', case: :leet, nullify: false
 end
 
 ```
