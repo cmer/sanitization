@@ -1,5 +1,5 @@
-module ActiveRecordExt
-  module Sanitization
+module Sanitization
+  module ActiveRecordExtension
     def self.append_features(base)
       super
       base.extend(ClassMethods)
@@ -10,7 +10,6 @@ module ActiveRecordExt
 
       private
       def sanitization(options = {})
-        return
         # Skip initialization if table is not yet created. For example, during migrations.
         return unless ActiveRecord::Base.connection.data_source_exists?(self.table_name)
 
@@ -52,7 +51,7 @@ module ActiveRecordExt
         end
 
         class_eval <<-EOV
-          include ActiveRecord::Sanitization::InstanceMethods
+          include Sanitization::ActiveRecordExtension::InstanceMethods
           before_save :sanitization__format_strings
         EOV
       end
@@ -117,6 +116,6 @@ module ActiveRecordExt
 
 
     end # module InstanceMethods
-  end # module Sanitization
-end # module ActiveRecordExt
+  end # module ActiveRecordExt
+end # module Sanitization
 

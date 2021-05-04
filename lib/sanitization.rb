@@ -1,10 +1,11 @@
 require "sanitization/version"
-require "active_record_ext/sanitization"
+require "sanitization/active_record_extension"
+require "active_record" unless defined?(ActiveRecord)
 
 module Sanitization
   class Error < StandardError; end
 end
 
 ActiveRecord::Base.class_eval do
-  include ActiveRecordExt::Sanitization
+  include Sanitization::ActiveRecordExtension
 end
