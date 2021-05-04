@@ -1,6 +1,4 @@
-require 'active_record'
-
-module ActiveRecord
+module ActiveRecordExt
   module Sanitization
     def self.append_features(base)
       super
@@ -12,6 +10,10 @@ module ActiveRecord
 
       private
       def sanitization(options = {})
+        return
+        # Skip initialization if table is not yet created. For example, during migrations.
+        return unless ActiveRecord::Base.connection.data_source_exists?(self.table_name)
+
         self.sanitization__store ||= {}
 
         options[:only]     = Array.wrap(options[:only])
@@ -116,5 +118,5 @@ module ActiveRecord
 
     end # module InstanceMethods
   end # module Sanitization
-end # module ActiveRecord
+end # module ActiveRecordExt
 
