@@ -2,6 +2,7 @@
 
 Sanitization makes it easy to store slightly cleaner strings to your database.
 
+
 ### Features (all optional):
 
 - White space stripping
@@ -9,14 +10,37 @@ Sanitization makes it easy to store slightly cleaner strings to your database.
 - Empty string to nil (if database column supports it)
 - Change casing (ie. upcase, downcase, titlecase, etc)
 
+
 ### Defaults
 
-- Leading & training white spaces are stripped (`strip: true`)
-- All spaces are collapsed (`collapse: true`)
-- All empty strings are stored as `null` if the database column allows it (`nullify: true`)
+By default, Sanitization has all options disabled. It is recommended you use a configuration block to set
+sensitive defaults for your projects.
+
+For example, I use:
+
+```ruby
+# config/initializers/sanitization.rb
+
+Sanitization.configure do |config|
+  config.strip = true
+  config.collapse = true
+  config.nullify = true
+end
+
+# or you can use the following shortcut instead:
+
+Sanitization.simple_defaults!
+```
+
+
+### Configuration Options
+
+- Strip leading & training white spaces (`strip: true|false`)
+- Collapse consecutive spaces (`collapse: true|false`)
+- Store empty strings as `null` if the database column allows it (`nullify: true|false`)
 - All String columns are sanitized (`only: nil, except: nil`)
-- Columns of type `text` are not sanitized (`include_text_type: false`)
-- Casing remains unchanged (`case: nil`)
+- Also sanitize strings of type `text` (`include_text_type: true|false`)
+- Change casing: (`case: :none|:up|:down|:custom`)
 
 
 ## Installation
@@ -29,6 +53,14 @@ bundle add sanitization
 ## Usage
 
 ```ruby
+
+# Assuming the following configuration block:
+Sanitization.configure do |config|
+  config.strip = true
+  config.collapse = true
+  config.nullify = true
+end
+
 # Default settings for all strings
 class Person < ApplicationModel
   sanitization
@@ -70,9 +102,11 @@ end
 
 ```
 
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+
 
 ## License
 

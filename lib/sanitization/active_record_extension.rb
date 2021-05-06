@@ -15,11 +15,8 @@ module Sanitization
 
         self.sanitization__store ||= {}
 
-        options[:only]     = Array.wrap(options[:only])
-        options[:except]   = Array.wrap(options[:except])
-        options[:strip]    = !!(options[:strip].nil? ? true : options[:strip])
-        options[:collapse] = !!(options[:collapse].nil? ? true : options[:collapse])
-        options[:nullify]  = !!(options[:nullify].nil? ? true : options[:nullify])
+        options[:only]   = Array.wrap(options[:only])
+        options[:except] = Array.wrap(options[:except])
 
         unless options[:case].nil?
           raise ArgumentError.new("Invalid type for `case`: #{options[:case].class}") \
@@ -41,8 +38,9 @@ module Sanitization
         end
 
         if options[:case]
-          raise ArgumentError.new("Method not found: `:#{options[:case]}`. Valid methods are: :#{valid_case_methods.join(', :')}") \
-            unless valid_case_methods.include?(options[:case])
+          raise ArgumentError.new("Method not found: `:#{options[:case]}`. " +
+            "Valid methods are: :#{valid_case_methods.join(', :')}") \
+            unless valid_case_methods.include?(options[:case]) || options[:case] == :none
         end
 
         columns_to_format.each do |col|
@@ -95,9 +93,9 @@ module Sanitization
       def sanitization__format_column(col_name, col_formatting)
         return unless self[col_name].is_a?(String)
 
-        self[col_name].strip! if col_formatting[:strip]
+        self[col_name].strip! if value_or_default(col_formatting, :strip)
 
-        if col_formatting[:collapse]
+        if value_or_default(col_formatting, :collapse)
           if MULTIBYTE_SUPPORTED && Encoding.compatible?(self[col_name], MULTIBYTE_BLANK)
             self[col_name].gsub!(/#{MULTIBYTE_BLANK}+/, " ")
           else
@@ -105,13 +103,25 @@ module Sanitization
           end
         end
 
-        if col_formatting[:nullify] && !self[col_name].nil? && self[col_name].to_s.empty? && \
+        if value_or_default(col_formatting, :nullify) && !self[col_name].nil? && self[col_name].to_s.empty? && \
           self.class.columns.select { |c| c.name == col_name }.first.null
           return self[col_name] = nil
         end
 
-        self[col_name] = self[col_name].send(col_formatting[:case]) if col_formatting[:case]
+        case_formatting_method = value_or_default(col_formatting, :case)
+        if !case_formatting_method.nil? && case_formatting_method != :none
+          self[col_name] = self[col_name].send(case_formatting_method)
+        end
+
         self[col_name]
+      end
+
+      def value_or_default(col_formatting, transform)
+        if col_formatting[transform].nil?
+          Sanitization.configuration[transform]
+        else
+          col_formatting[transform]
+        end
       end
 
 
