@@ -9,7 +9,7 @@ module Sanitization
       attr_accessor :sanitization__store
 
       private
-      def sanitization(options = {})
+      def sanitizes(options = {})
         # Skip initialization if table is not yet created. For example, during migrations.
         return unless ActiveRecord::Base.connection.data_source_exists?(self.table_name)
 
@@ -53,6 +53,7 @@ module Sanitization
           before_save :sanitization__format_strings
         EOV
       end
+      alias sanitization sanitizes
 
       def valid_case_methods
         String.new.methods.map { |m|

@@ -28,11 +28,13 @@ class String
 end
 
 class Person
-  sanitization case: :title, except: :description
-  sanitization only: [:first_name, :last_name], case: :up
-  sanitization only: :email, case: :downcase
-  sanitization only: :description, include_text_type: true
-  sanitization only: :do_not_collapse, collapse: false
+  sanitizes case: :title, except: :description
+  sanitizes only: [:first_name, :last_name], case: :up
+  sanitizes only: :email, case: :downcase
+  sanitizes only: :description, include_text_type: true
+  sanitizes only: :do_not_collapse, collapse: false
+
+  # `sanitization` is an alias of `sanitizes`
   sanitization only: '1337', case: :leet
 end
 

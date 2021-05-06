@@ -63,41 +63,41 @@ end
 
 # Default settings for all strings
 class Person < ApplicationModel
-  sanitization
+  sanitizes
   # is equivalent to:
-  sanitization strip: true, collapse: true, include_text_type: false
+  sanitizes strip: true, collapse: true, include_text_type: false
 end
 
 # Default settings for all strings, except a specific column
 class Person < ApplicationModel
-  sanitization except: :alias
+  sanitizes except: :alias
 end
 
 # Default settings + titlecase for specific columns
 class Person < ApplicationModel
-  sanitization only: [:first_name, :last_name], case: :title
+  sanitizes only: [:first_name, :last_name], case: :title
 end
 
 # Complex example. All these lines could be used in combination.
 class Person
   # Apply default settings and `titlecase` to all string columns, except `description`.
-  sanitization case: :title, except: :description
+  sanitizes case: :title, except: :description
 
   # Keep previous settings, but specify `upcase` for 2 columns.
-  sanitization only: [:first_name, :last_name], case: :up
+  sanitizes only: [:first_name, :last_name], case: :up
 
   # Keep previous settings, but specify `downcase` for a single column.
-  sanitization only: :email, case: :downcase
+  sanitizes only: :email, case: :downcase
 
   # Apply default settings to column `description`, of type `text`. By default, `text` type is NOT sanitized.
-  sanitization only: :description, include_text_type: true
+  sanitizes only: :description, include_text_type: true
 
   # Disable collapsing for `do_not_collapse`.
-  sanitization only: :do_not_collapse, collapse: false
+  sanitizes only: :do_not_collapse, collapse: false
 
   # Sanitize with a custom casing method named `leetcase` for the `133t` column.
   # Don't nullify empty strings.
-  sanitization only: '1337', case: :leet, nullify: false
+  sanitizes only: '1337', case: :leet, nullify: false
 end
 
 ```
