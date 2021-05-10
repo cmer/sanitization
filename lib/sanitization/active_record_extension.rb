@@ -11,7 +11,11 @@ module Sanitization
       private
       def sanitizes(options = {})
         # Skip initialization if table is not yet created. For example, during migrations.
-        return unless ActiveRecord::Base.connection.data_source_exists?(self.table_name)
+        begin
+          return unless ActiveRecord::Base.connection.data_source_exists?(self.table_name)
+        rescue ActiveRecord::NoDatabaseError
+          return
+        end
 
         self.sanitization__store ||= {}
 
@@ -38,9 +42,13 @@ module Sanitization
         end
 
         if options[:case]
+          @valid_case_methods ||= String.new.methods.map { |m|
+            m.to_s if m.to_s =~ /case$/
+          }.compact
+
           raise ArgumentError.new("Method not found: `:#{options[:case]}`. " +
-            "Valid methods are: :#{valid_case_methods.join(', :')}") \
-            unless valid_case_methods.include?(options[:case]) || options[:case] == :none
+            "Valid methods are: :#{@valid_case_methods.join(', :')}") \
+            unless @valid_case_methods.include?(options[:case]) || options[:case] == :none
         end
 
         columns_to_format.each do |col|
@@ -54,12 +62,6 @@ module Sanitization
         EOV
       end
       alias sanitization sanitizes
-
-      def valid_case_methods
-        String.new.methods.map { |m|
-          m.to_s if m.to_s =~ /case$/
-        }.compact
-      end
     end # module ClassMethods
 
     module InstanceMethods
