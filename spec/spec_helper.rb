@@ -1,6 +1,9 @@
 require "bundler/setup"
+require "cucumber/ci_environment"
 require "sanitization"
 require "byebug"
+
+ci_environment = Cucumber::CiEnvironment.detect_ci_environment(ENV)
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
@@ -13,8 +16,10 @@ RSpec.configure do |config|
     c.syntax = :expect
   end
 
-  config.filter_run focus: true
-  config.run_all_when_everything_filtered = true
+  if ci_environment.nil?
+    config.filter_run focus: true
+    config.run_all_when_everything_filtered = true
+  end
 end
 
 ActiveRecord::Base.establish_connection(adapter: 'sqlite3', database: ':memory:')
