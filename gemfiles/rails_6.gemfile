@@ -7,6 +7,7 @@ gem "rspec", "~> 3.0"
 gem "appraisal", "~> 2.4.1"
 gem "sqlite3"
 gem "byebug"
-gem "rails", "~> 6.1.4"
+gem "activerecord", "~> 6.1.4"
+gem "activesupport", "~> 6.1.4"
 
 gemspec path: "../"
