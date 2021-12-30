@@ -1,6 +1,5 @@
 require "bundler/setup"
 require "sanitization"
-require "temping"
 require "byebug"
 
 RSpec.configure do |config|
@@ -17,3 +16,20 @@ end
 
 ActiveRecord::Base.establish_connection(adapter: 'sqlite3', database: ':memory:')
 ActiveRecord::Schema.verbose = false
+ActiveRecord::Schema.define(version: 1) do
+  create_table :people do |t|
+    t.string :first_name, null: false
+    t.string :last_name, null: false
+    t.string :company
+    t.string :address
+    t.string :city, null: false
+    t.string :title
+    t.string :email, null: false
+    t.text   :description
+    t.text   :education
+    t.string :do_not_collapse, null: false
+    t.date   :dob
+    t.integer :age
+    t.string '1337'
+  end
+end

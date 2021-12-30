@@ -1,21 +1,3 @@
-Temping.create :person do
-  with_columns do |t|
-    t.string :first_name, null: false
-    t.string :last_name, null: false
-    t.string :company
-    t.string :address
-    t.string :city, null: false
-    t.string :title
-    t.string :email, null: false
-    t.text   :description
-    t.text   :education
-    t.string :do_not_collapse, null: false
-    t.date   :dob
-    t.integer :age
-    t.string '1337'
-  end
-end
-
 class String
   # custom `case` method
   def leetcase
@@ -27,7 +9,7 @@ class String
   end
 end
 
-class Person
+class Person < ActiveRecord::Base
   sanitizes case: :title, except: :description
   sanitizes only: [:first_name, :last_name], case: :up
   sanitizes only: :email, case: :downcase
