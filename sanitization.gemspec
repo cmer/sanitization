@@ -6,8 +6,8 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Carl Mercier"]
   spec.email         = ["foss@carlmercier.com"]
 
-  spec.summary       = %q{}
-  spec.description   = %q{}
+  spec.summary       = %q{Sanitization makes it easy to store slightly cleaner strings to your database.}
+  spec.description   = %q{Sanitization makes it easy to store slightly cleaner strings to your database.}
   spec.homepage      = "https://github.com/cmer/sanitization"
   spec.license       = "MIT"
   spec.required_ruby_version = Gem::Requirement.new(">= 2.6.0")

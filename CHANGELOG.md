@@ -1,3 +1,9 @@
+# 1.1.3
+* Official support for Rails 7
+
+# 1.1.2
+* Bug fixes
+
 # 1.1.1
 * Changed `sanitization` method to `sanitizes` as the new preferred way. `sanitization` still works and is an alias of `sanitizes`.
 
