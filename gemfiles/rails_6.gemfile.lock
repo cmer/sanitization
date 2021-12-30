@@ -145,9 +145,6 @@ GEM
       activesupport (>= 5.2)
       sprockets (>= 3.0.0)
     sqlite3 (1.4.2)
-    temping (3.10.0)
-      activerecord (>= 4.2)
-      activesupport (>= 4.2)
     thor (1.1.0)
     tzinfo (2.0.4)
       concurrent-ruby (~> 1.0)
@@ -160,14 +157,13 @@ PLATFORMS
   arm64-darwin-21
 
 DEPENDENCIES
-  appraisal
+  appraisal (~> 2.4.1)
   byebug
   rails (~> 6.1.4)
   rake (~> 12.0)
   rspec (~> 3.0)
   sanitization!
   sqlite3
-  temping (~> 3.0)
 
 BUNDLED WITH
    2.2.22
