@@ -4,6 +4,6 @@ appraise "rails-6" do
 end
 
 appraise "rails-7" do
-  gem "activerecord", "~> 7.0"
-  gem "activesupport", "~> 7.0"
+  gem "activerecord", "~> 7.0.1"
+  gem "activesupport", "~> 7.0.1"
 end
