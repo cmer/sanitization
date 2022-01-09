@@ -1,3 +1,6 @@
+# 1.1.4
+* Official support for Ruby 3.1
+
 # 1.1.3
 * Official support for Rails 7
 
