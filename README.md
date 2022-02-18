@@ -3,6 +3,7 @@
 Sanitization makes it easy to store slightly cleaner strings to your database.
 
 ![Specs](https://github.com/cmer/sanitization/actions/workflows/specs.yml/badge.svg)
+[![Gem Version](https://badge.fury.io/rb/sanitization.svg)](https://badge.fury.io/rb/sanitization)
 
 ### Features (all optional):
 
