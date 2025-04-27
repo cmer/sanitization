@@ -28,5 +28,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
   spec.add_runtime_dependency "activerecord"
   spec.add_runtime_dependency "activesupport"
-  spec.add_development_dependency "appraisal"
+  spec.add_development_dependency "appraisal", "~> 2.5"
+  spec.add_development_dependency "concurrent-ruby", "< 1.3.5"
+  spec.add_development_dependency "sqlite3", "~> 2.6.0"
 end
