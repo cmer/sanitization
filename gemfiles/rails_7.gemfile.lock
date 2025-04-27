@@ -85,7 +85,7 @@ DEPENDENCIES
   rake (~> 13.2)
   rspec (~> 3.0)
   sanitization!
-  sqlite3
+  sqlite3 (~> 2.6.0)
 
 BUNDLED WITH
    2.6.3
