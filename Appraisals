@@ -4,7 +4,7 @@ appraise "rails-6" do
   gem "mutex_m", "~> 0.3.0"
   gem "base64"
   gem "bigdecimal"
-  gem "sqlite3", "~> 2.6.0"
+  gem "sqlite3", "~> 1.4"
 
   # Fixes uninitialized constant ActiveSupport::LoggerThreadSafeLevel::Logger (NameError)
   gem "concurrent-ruby", "< 1.3.5"
@@ -16,7 +16,7 @@ appraise "rails-7" do
   gem "mutex_m", "~> 0.3.0"
   gem "base64"
   gem "bigdecimal"
-  gem "sqlite3", "~> 2.6.0"
+  gem "sqlite3", "~> 1.4"
 
   # Fixes uninitialized constant ActiveSupport::LoggerThreadSafeLevel::Logger (NameError)
   gem "concurrent-ruby", "< 1.3.5"
