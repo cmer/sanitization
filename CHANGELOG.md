@@ -1,7 +1,7 @@
 # 1.2
 * Official support for Rails 8
 * Official support for Ruby 3.4
-* Deprecated support for Ruby < 3.1
+* Deprecated support for Ruby < 3.2
 
 # 1.1.4
 * Official support for Ruby 3.1
