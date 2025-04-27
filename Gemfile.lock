@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    sanitization (1.1.4)
+    sanitization (1.2.0)
       activerecord
       activesupport
 
