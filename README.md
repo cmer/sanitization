@@ -45,6 +45,11 @@ Sanitization.simple_defaults!
 - Change casing: (`case: :none|:up|:down|:custom`)
 
 
+## Compatibility
+
+- Ruby >= 3.2
+- Rails >= 7.1
+
 ## Installation
 
 ```sh

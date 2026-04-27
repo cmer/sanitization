@@ -1,4 +1,7 @@
 ## Unreleased
+* **BREAKING CHANGE:** Minimum Rails version is now 7.1 (dropped Rails 6.x and 7.0)
+* **BREAKING CHANGE:** Minimum Ruby version is now 3.2
+* Added support for Rails 7.1 and 7.2 in test matrix
 
 # 1.2
 * Official support for Rails 8
