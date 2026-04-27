@@ -94,4 +94,92 @@ RSpec.describe Sanitization do
       end
     end
   end
+
+  context "Assignment-time semantics (normalizes integration)" do
+    before(:all) { Sanitization.simple_defaults! }
+
+    let(:base_attrs) {
+      { first_name: "John", last_name: "Smith", city: "NYC",
+        email: "user@example.org", do_not_collapse: "x" }
+    }
+
+    it "normalizes on assignment, before save" do
+      person = Person.new
+      person.first_name = " john "
+      expect(person.first_name).to eq("JOHN")
+      expect(person.persisted?).to be false
+    end
+
+    it "normalizes attributes passed to .new" do
+      person = Person.new(first_name: "  jane  ", email: "  USER@X.ORG  ")
+      expect(person.first_name).to eq("JANE")
+      expect(person.email).to eq("user@x.org")
+    end
+
+    it "leaves nil values as nil (apply_to_nil: false default)" do
+      person = Person.new(first_name: nil)
+      expect(person.first_name).to be_nil
+    end
+
+    it "is idempotent — normalizing a normalized value is a no-op" do
+      once  = Person.normalize_value_for(:email, "  USER@X.ORG  ")
+      twice = Person.normalize_value_for(:email, once)
+      expect(once).to eq("user@x.org")
+      expect(twice).to eq(once)
+    end
+
+    it "normalizes hash conditions in .where" do
+      Person.create!(base_attrs.merge(email: "raw@example.org"))
+      expect(Person.where(email: "  RAW@EXAMPLE.ORG  ").count).to be >= 1
+    end
+
+    it "normalizes the lookup value in .find_by" do
+      Person.create!(base_attrs.merge(email: "lookup@example.org"))
+      expect(Person.find_by(email: "  LOOKUP@EXAMPLE.ORG  ")).not_to be_nil
+    end
+
+    it "does NOT auto-normalize legacy rows on plain save" do
+      person = Person.create!(base_attrs.merge(email: "legacy@example.org"))
+      ActiveRecord::Base.connection.execute(
+        "UPDATE people SET email = '  LEGACY-RAW@X.ORG  ' WHERE id = #{person.id}"
+      )
+      person.reload
+      expect(person.email).to eq("  LEGACY-RAW@X.ORG  ") # reload does not normalize
+      person.last_name = "OTHER"
+      person.save!
+      person.reload
+      expect(person.email).to eq("  LEGACY-RAW@X.ORG  ") # unrelated save did not heal it
+    end
+
+    it "migrates legacy rows on demand via normalize_attribute" do
+      person = Person.create!(base_attrs.merge(email: "migrate@example.org"))
+      ActiveRecord::Base.connection.execute(
+        "UPDATE people SET email = '  MIGRATE-RAW@X.ORG  ' WHERE id = #{person.id}"
+      )
+      person.reload
+      person.normalize_attribute(:email)
+      person.save!
+      person.reload
+      expect(person.email).to eq("migrate-raw@x.org")
+    end
+
+    it "re-normalizes values mutated in place before validation" do
+      person = Person.new(base_attrs)
+      person.email << "   "  # mutate in place
+      person.valid?          # before_validation hook re-normalizes
+      expect(person.email).to eq("user@example.org")
+    end
+
+    it "runs validations against normalized values" do
+      validating = Class.new(Person) do
+        def self.name; "ValidatingPerson"; end
+        validates_each :email do |record, attr, value|
+          record.errors.add(attr, "must be lowercase") if value && value != value.downcase
+        end
+      end
+      person = validating.new(base_attrs.merge(email: "  RAW@X.ORG  "))
+      expect(person.email).to eq("raw@x.org")
+      expect(person.valid?).to be true
+    end
+  end
 end

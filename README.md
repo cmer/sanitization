@@ -13,6 +13,19 @@ Sanitization makes it easy to store slightly cleaner strings to your database.
 - Change casing (ie. upcase, downcase, titlecase, etc)
 
 
+### Built on top of `ActiveRecord::Base.normalizes`
+
+As of 2.0, Sanitization is a thin macro layer on top of Rails 7.1's [`ActiveRecord::Base.normalizes`](https://api.rubyonrails.org/classes/ActiveRecord/Normalization/ClassMethods.html). The `sanitizes` DSL is unchanged — under the hood, each declared column is registered with `normalizes`, and Sanitization composes a single normalizer per column from your `:strip`, `:collapse`, `:nullify`, and `:case` options (plus their global defaults).
+
+Because `normalizes` runs at attribute **assignment** time (not `before_save`), this gives you a few useful behaviors automatically:
+
+- **Read-after-write returns the normalized value.** `person.name = " john "; person.name` returns `"john"` immediately — validations and any pre-save reads see the cleaned value.
+- **`where`/`find_by` hash conditions normalize the lookup value.** `User.where(email: "  RAW@X.COM  ")` matches a row stored as `"raw@x.com"`. (Raw-SQL conditions still bypass normalization.)
+- **Legacy un-normalized rows are not silently rewritten on save.** Reload + save no longer "heals" old data. To migrate, reassign the attribute or call `record.normalize_attribute(:col)` (a built-in helper from `normalizes`).
+
+If you're upgrading from 1.x, see the CHANGELOG for the full list of behavior changes.
+
+
 ### Defaults
 
 By default, Sanitization has all options disabled. It is recommended you use a configuration block to set
