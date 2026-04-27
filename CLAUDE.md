@@ -44,3 +44,7 @@ Tests use RSpec with an in-memory SQLite database. The `spec_helper.rb` creates 
 CI runs on Ruby 3.2, 3.3, 3.4 against Rails 6.1, 7.0, and 8.0 via Appraisal.
 
 Note: ActiveSupport 7+ changed `titlecase` behavior (it strips leading spaces), which affects test expectations between Rails versions.
+
+## Changelog Workflow
+
+Track changes in the `## Unreleased` section of `CHANGELOG.md` as they are made. When a new version is released, rename the `## Unreleased` heading to the version number (e.g., `# 1.3`) and add a fresh `## Unreleased` section above it.

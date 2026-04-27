@@ -1,3 +1,5 @@
+## Unreleased
+
 # 1.2
 * Official support for Rails 8
 * Official support for Ruby 3.4
