@@ -1,37 +1,65 @@
 # Sanitization
 
-Sanitization makes it easy to store slightly cleaner strings to your database.
+Strip, collapse, nullify, and case-fix string attributes in ActiveRecord models without writing a `normalizes` lambda for every column.
 
 ![Specs](https://github.com/cmer/sanitization/actions/workflows/specs.yml/badge.svg)
 [![Gem Version](https://badge.fury.io/rb/sanitization.svg)](https://badge.fury.io/rb/sanitization)
 
-### Features (all optional):
+## What it does
 
-- White space stripping
-- White space collapsing (multiple consecutive spaces combined into one)
-- Empty string to nil (if database column supports it)
-- Change casing (ie. upcase, downcase, titlecase, etc)
+Sanitization keeps the strings you store in your database clean, without sprinkling normalization rules across every model. It can:
 
+- Strip leading and trailing whitespace (including unicode invisible characters)
+- Collapse runs of consecutive spaces into a single space
+- Convert empty strings to `nil` (when the column allows null)
+- Apply case transformations (`:up`, `:down`, `:title`, or any custom `*case` method)
 
-### Built on top of `ActiveRecord::Base.normalizes`
+You declare your intent once, at the model level, and Sanitization figures out which columns to touch by introspecting the schema.
 
-As of 2.0, Sanitization is a thin macro layer on top of Rails 7.1's [`ActiveRecord::Base.normalizes`](https://api.rubyonrails.org/classes/ActiveRecord/Normalization/ClassMethods.html). The `sanitizes` DSL is unchanged — under the hood, each declared column is registered with `normalizes`, and Sanitization composes a single normalizer per column from your `:strip`, `:collapse`, `:nullify`, and `:case` options (plus their global defaults).
+## Why not just use `normalizes`?
 
-Because `normalizes` runs at attribute **assignment** time (not `before_save`), this gives you a few useful behaviors automatically:
+As of Rails 7.1, ActiveRecord ships [`normalizes`](https://api.rubyonrails.org/classes/ActiveRecord/Normalization/ClassMethods.html), which Sanitization is now built on top of (since 2.0). So why use this gem?
 
-- **Read-after-write returns the normalized value.** `person.name = " john "; person.name` returns `"john"` immediately — validations and any pre-save reads see the cleaned value.
-- **`where`/`find_by` hash conditions normalize the lookup value.** `User.where(email: "  RAW@X.COM  ")` matches a row stored as `"raw@x.com"`. (Raw-SQL conditions still bypass normalization.)
-- **Legacy un-normalized rows are not silently rewritten on save.** Reload + save no longer "heals" old data. To migrate, reassign the attribute or call `record.normalize_attribute(:col)` (a built-in helper from `normalizes`).
+Because `normalizes` is a low-level primitive. It normalizes **one attribute at a time**, with **one lambda at a time**, and has **no notion of project-wide defaults**. In a real app with dozens of models and hundreds of string columns, that gets verbose fast.
 
-If you're upgrading from 1.x, see the CHANGELOG for the full list of behavior changes.
+Compare a typical model with manual `normalizes`:
 
+```ruby
+class Person < ApplicationRecord
+  normalizes :first_name, :last_name, :email, :phone, :address, :city,
+             with: ->(v) {
+               v = v.strip.squeeze(" ")
+               v.empty? ? nil : v
+             }
+  normalizes :email, with: ->(v) { v&.downcase }
+  normalizes :first_name, :last_name, with: ->(v) { v&.titlecase }
+  # ...and you have to remember to add every new string column here, forever
+end
+```
 
-### Defaults
+Versus the same thing with Sanitization:
 
-By default, Sanitization has all options disabled. It is recommended you use a configuration block to set
-sensitive defaults for your projects.
+```ruby
+class Person < ApplicationRecord
+  sanitizes                                            # strip + collapse + nullify on every string column
+  sanitizes only: :email, case: :down
+  sanitizes only: [:first_name, :last_name], case: :title
+end
+```
 
-For example, I use:
+The wins:
+
+- **Sane defaults, set once.** Configure `strip`, `collapse`, `nullify`, and `case` globally in an initializer and every model picks them up. No per-column boilerplate.
+- **Schema-aware.** `sanitizes` (with no arguments) automatically applies to every `string` column on the table. Add a new column, it's covered. No code changes required.
+- **Composable rules.** Stack multiple `sanitizes` calls to start from defaults and refine specific columns (`only:`, `except:`, per-column `case:`, etc.) without duplicating the base logic.
+- **Smart `nullify`.** Empty strings only become `nil` when the column is actually nullable, by inspecting `null` on the column definition. You don't have to remember which columns are `NOT NULL`.
+- **Multibyte-safe whitespace handling.** Strips Unicode invisibles (zero-width space, BOM, word joiner, etc.) — the kind of garbage that shows up when users paste from Word or chat apps.
+
+Under the hood, every option you pass is compiled into a single `normalizes` lambda per column, so you keep all the upstream behavior (assignment-time normalization, `where`/`find_by` lookup normalization, `record.normalize_attribute(:col)`, etc.) — you just don't have to write it.
+
+## Setting sane defaults
+
+Out of the box, Sanitization does nothing — every option is opt-in. The recommended setup is to enable the common-sense defaults in an initializer:
 
 ```ruby
 # config/initializers/sanitization.rb
@@ -42,26 +70,11 @@ Sanitization.configure do |config|
   config.nullify = true
 end
 
-# or you can use the following shortcut instead:
-
+# or, equivalently:
 Sanitization.simple_defaults!
 ```
 
-
-### Configuration Options
-
-- Strip leading & training white spaces (`strip: true|false`)
-- Collapse consecutive spaces (`collapse: true|false`)
-- Store empty strings as `null` if the database column allows it (`nullify: true|false`)
-- All String columns are sanitized (`only: nil, except: nil`)
-- Also sanitize strings of type `text` (`include_text_type: true|false`)
-- Change casing: (`case: :none|:up|:down|:custom`)
-
-
-## Compatibility
-
-- Ruby >= 3.2
-- Rails >= 7.1
+With that in place, calling `sanitizes` in any model strips, collapses, and nullifies every string column with no further configuration. Models can still override any option locally.
 
 ## Installation
 
@@ -69,64 +82,84 @@ Sanitization.simple_defaults!
 bundle add sanitization
 ```
 
+Compatibility: Ruby >= 3.2, Rails >= 7.1.
 
 ## Usage
 
 ```ruby
+# Assuming the initializer above is loaded.
 
-# Assuming the following configuration block:
-Sanitization.configure do |config|
-  config.strip = true
-  config.collapse = true
-  config.nullify = true
-end
-
-# Default settings for all strings
-class Person < ApplicationModel
+# Apply default settings to every string column.
+class Person < ApplicationRecord
   sanitizes
-  # is equivalent to:
-  sanitizes strip: true, collapse: true, include_text_type: false
+  # equivalent to: sanitizes strip: true, collapse: true, nullify: true, include_text_type: false
 end
 
-# Default settings for all strings, except a specific column
-class Person < ApplicationModel
+# Apply defaults to every string column except one.
+class Person < ApplicationRecord
   sanitizes except: :alias
 end
 
-# Default settings + titlecase for specific columns
-class Person < ApplicationModel
+# Apply defaults, plus titlecase on specific columns.
+class Person < ApplicationRecord
   sanitizes only: [:first_name, :last_name], case: :title
 end
 
-# Complex example. All these lines could be used in combination.
-class Person
-  # Apply default settings and `titlecase` to all string columns, except `description`.
+# Stack multiple calls to refine behavior per column.
+class Person < ApplicationRecord
+  # Defaults + titlecase for every string column except `description`.
   sanitizes case: :title, except: :description
 
-  # Keep previous settings, but specify `upcase` for 2 columns.
+  # Override case for two columns.
   sanitizes only: [:first_name, :last_name], case: :up
 
-  # Keep previous settings, but specify `downcase` for a single column.
+  # Override case for a single column.
   sanitizes only: :email, case: :downcase
 
-  # Apply default settings to column `description`, of type `text`. By default, `text` type is NOT sanitized.
+  # Include a `text` column (text columns are skipped by default).
   sanitizes only: :description, include_text_type: true
 
-  # Disable collapsing for `do_not_collapse`.
+  # Disable collapsing for one column.
   sanitizes only: :do_not_collapse, collapse: false
 
-  # Sanitize with a custom casing method named `leetcase` for the `133t` column.
-  # Don't nullify empty strings.
-  sanitizes only: '1337', case: :leet, nullify: false
+  # Use a custom `*case` method (e.g. a String#leetcase you defined),
+  # and don't nullify empty strings on this column.
+  sanitizes only: :handle, case: :leet, nullify: false
 end
-
 ```
 
+## Configuration options
+
+| Option              | Values                                | Description                                                                 |
+| ------------------- | ------------------------------------- | --------------------------------------------------------------------------- |
+| `strip`             | `true` / `false`                      | Strip leading and trailing whitespace (including Unicode invisibles).       |
+| `collapse`          | `true` / `false`                      | Collapse runs of consecutive whitespace into a single space.                |
+| `nullify`           | `true` / `false`                      | Convert empty strings to `nil` when the column allows null.                 |
+| `case`              | `:none`, `:up`, `:down`, `:title`, …  | Apply any `String#*case` method (built-in or custom).                       |
+| `only`              | Symbol or Array                       | Restrict to specific columns.                                               |
+| `except`            | Symbol or Array                       | Exclude specific columns.                                                   |
+| `include_text_type` | `true` / `false`                      | Also sanitize `text` columns (skipped by default).                          |
+
+## Behavior notes (built on `normalizes`)
+
+Since Sanitization 2.0 is implemented on top of Rails' `normalizes`, normalization runs at **attribute assignment** time, not in a `before_save` callback. A few useful consequences:
+
+- **Read-after-write returns the normalized value.** `person.name = " john "; person.name` returns `"john"` immediately. Validations see the cleaned value.
+- **`where` / `find_by` hash conditions normalize the lookup value.** `User.where(email: "  RAW@X.COM  ")` matches a row stored as `"raw@x.com"`. Raw-SQL conditions (`where("email = ?", …)`) still bypass normalization.
+- **Legacy un-normalized rows are not silently rewritten on save.** To migrate old data, reassign the attribute or call `record.normalize_attribute(:col)` (a built-in helper from `normalizes`).
+
+Upgrading from 1.x? See the [CHANGELOG](CHANGELOG.md) for the full list of behavior changes.
 
 ## Development
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+After checking out the repo, run `bin/setup` to install dependencies. Then run `rake spec` to run the tests, or `bin/console` for an interactive prompt.
 
+To run tests across all supported Rails versions:
+
+```sh
+bundle exec appraisal install
+bundle exec appraisal rspec
+```
 
 ## License
 
