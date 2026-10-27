@@ -48,3 +48,5 @@ Note: ActiveSupport 7+ changed `titlecase` behavior (it strips leading spaces), 
 ## Changelog Workflow
 
 Track changes in the `## Unreleased` section of `CHANGELOG.md` as they are made. When a new version is released, rename the `## Unreleased` heading to the version number (e.g., `# 1.3`) and add a fresh `## Unreleased` section above it.
+
+End any turn that reports on long-running or delegated work with a short status: **Goal**, **Done**, **Next**, **Needs you** (or "nothing").
